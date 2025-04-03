@@ -177,11 +177,11 @@ function generateTabsAndContents() {
                     updateButton.addEventListener("click", () => {
                         const newTitle = prompt("عنوان جدید:", title);
                         const newBody = prompt("متن جدید:", body);
-
+            
                         if (newTitle && newBody) {
                             const noteIndex = notesForTab.findIndex(note => note.title === title);
                             if (noteIndex !== -1) {
-                                notes[tabName][noteIndex] = { title: newTitle, body: newBody, timestamp: Date.now() };
+                                notes[index][noteIndex] = { title: newTitle, body: newBody, timestamp: Date.now() }; 
                                 chrome.storage.local.set({ notes }, () => {
                                     alert("یادداشت با موفقیت ویرایش شد.");
                                     generateTabsAndContents();
@@ -189,7 +189,7 @@ function generateTabsAndContents() {
                             }
                         }
                     });
-
+            
                     const deleteButton = document.createElement("button");
                     deleteButton.textContent = "حذف";
                     deleteButton.classList.add("deleteNoteBtn");
@@ -197,7 +197,7 @@ function generateTabsAndContents() {
                         if (confirm(`آیا می‌خواهید یادداشت "${title}" را حذف کنید؟`)) {
                             const noteIndex = notesForTab.findIndex(note => note.title === title);
                             if (noteIndex !== -1) {
-                                notes[tabName].splice(noteIndex, 1);
+                                notes[index].splice(noteIndex, 1);
                                 chrome.storage.local.set({ notes }, () => {
                                     alert("یادداشت با موفقیت حذف شد.");
                                     generateTabsAndContents();

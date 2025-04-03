@@ -21,11 +21,14 @@
     flex-direction:row;
     justify-content: space-between;
 }
+#noteBody { 
+  resize:none !important;
+}
 #noteTitle, #noteBody , #noteTabsList{
     border-radius:10px;
 }
 #addNoteButton{
-    background-color: #4c8df5;
+    background-color: #12b049;
     color:#fff ; 
     border-radius:8px;
 }
@@ -33,20 +36,55 @@
     border-radius:10px;
 }
 #addNewTab{
-    background-color:#4c8df5;
+    background-color:#12b049;
     color:#fff;
     margin-right:5px;
 }
 
+.manageTabsContainer{
+  display: flex !important;
+  margin-top:10px !important;
+}
 .addTabsButton{
-    margin-top:10px !important;
     display: flex;
     flex-direction:row;
 }
-
+.modifyTab{
+  margin-right:10px;
+  padding-right:10px;
+  border-right:1px solid black;
+  display: flex;
+}
+#modifyTabsList{
+  margin-right:10px !important;
+  border-radius:10px;
+}
+.modifyTab button{
+  margin-right:5px;
+  border-radius:10px;
+}
+#editTabName{
+  color:#fff;
+  background-color:#4388e8;
+}
+#removeTab{
+  color:#fff;
+  background-color:#ff0000;
+}
+.updateNoteBtn{
+  color:#fff;
+  background-color:#4388e8;
+  border-radius:10px;
+}
+.deleteNoteBtn{
+  background-color:#ff0000;
+  color:#fff;
+  border-radius:10px;
+  margin-right:5px;
+}
 .tab {
+    margin-top:10px !important;
     overflow: scroll;
-    
     border: 1px solid #ccc;
     background-color: #f1f1f1;
     display: flex;

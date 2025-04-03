@@ -1,63 +1,115 @@
 var addNoteButton = document.getElementById("addNoteButton");
 addNoteButton.addEventListener("click", function () {
     var noteTitle = document.getElementById("noteTitle").value.trim();
-    var noteBody =  document.getElementById("noteBody").value.trim();
-    var selectedTab = document.getElementById("noteTabsList").value; 
+    var noteBody = document.getElementById("noteBody").value.trim();
+    var selectedTab = document.getElementById("noteTabsList").value;
 
-    if ((noteTitle === "" || noteTitle === null) && (noteBody === "" || noteBody === null)) {
-        alert("عنوان و متن یاداشت نمیتواند خالی باشد");
-    } else if ((noteTitle === "" || noteTitle === null) && (noteBody !== "" || noteBody !== null)) {
-        alert("لطفاً عنوان یادداشت را وارد کنید");
-    } else if ((noteTitle !== "" || noteTitle !== null) && (noteBody === "" || noteBody === null)) {
-        alert("لطفاً متن یادداشت را وارد کنید");
-    } else if (!selectedTab || selectedTab === "") {
-        alert("لطفاً یک تب معتبر انتخاب کنید!");
-    } else {
-        chrome.storage.local.get(["notes"], (result) => {
-            const notes = result.notes || {}; 
+    if (!noteTitle || !noteBody || !selectedTab) {
+        alert("لطفاً عنوان و متن یاداشت را وارد کنید و یک تب انتخاب کنید!");
+        return;
+    }
+
+    chrome.storage.local.get(["notes"], (result) => {
+        const notes = result.notes || {};
+
+        if (!notes[selectedTab]) {
+            notes[selectedTab] = [];
+        }
+        const existingNote = notes[selectedTab].find(note => note.title === noteTitle);
+        if (existingNote) {
+            alert(`یادداشتی با عنوان "${noteTitle}" قبلاً اضافه شده است. لطفاً عنوان جدیدی وارد کنید!`);
+            return;
+        }
+
+        notes[selectedTab].push({ title: noteTitle, body: noteBody, timestamp: Date.now() });
+
+        chrome.storage.local.set({ notes: notes }, () => {
+            alert(`یادداشت با موفقیت ذخیره شد!`);
+            document.getElementById("noteTitle").value = "";
+            document.getElementById("noteBody").value = "";
+            generateTabsAndContents();
+        });
+    });
+});
+
+
+var removeTabButton = document.getElementById("removeTab");
+removeTabButton.addEventListener("click", function() {
+    var selectedTabIndex = document.getElementById("modifyTabsList").value;
+    var selectedTabName = document.getElementById("modifyTabsList").options[selectedTabIndex].text;
+    
+    if (selectedTabIndex === "" || selectedTabIndex === null) {
+        alert("لطفاً یک تب برای حذف انتخاب کنید!");
+        return;
+    }
+    
+    if (confirm(`آیا مطمئن هستید که می‌خواهید تب "${selectedTabName}" و تمام یادداشت‌های آن را حذف کنید؟`)) {
+        chrome.storage.local.get(["tabs", "notes"], (result) => {
+            let tabsList = result.tabs || [];
+            let notes = result.notes || {};
+        
+            tabsList.splice(selectedTabIndex, 1);
             
-            if (!notes[selectedTab]) {
-                notes[selectedTab] = {}; 
-            }
-
-            if (notes[selectedTab][noteTitle]) {
-                alert(`یادداشتی با عنوان "${noteTitle}" قبلاً اضافه شده است. لطفاً عنوان جدیدی وارد کنید!`);
-                return; 
-            }
-
-            notes[selectedTab][noteTitle] = noteBody; 
-
-            chrome.storage.local.set({ notes: notes }, () => {
-                alert(`یادداشت با موفقیت ذخیره شد!`);
-                document.getElementById("noteTitle").value = ""
-                document.getElementById("noteBody").value = "";
+            delete notes[selectedTabIndex];
+        
+            let newNotes = {};
+            Object.keys(notes).forEach(tabIndex => {
+                if (parseInt(tabIndex) > parseInt(selectedTabIndex)) {
+                    newNotes[tabIndex - 1] = notes[tabIndex];
+                } else if (parseInt(tabIndex) < parseInt(selectedTabIndex)) {
+                    newNotes[tabIndex] = notes[tabIndex];
+                }
+            });
+            
+            chrome.storage.local.set({ 
+                tabs: tabsList,
+                notes: newNotes 
+            }, () => {
+                alert(`تب "${selectedTabName}" و یادداشت‌های آن با موفقیت حذف شدند.`);
+                populateTabsDropDown();
                 generateTabsAndContents();
             });
         });
     }
 });
 
+
 function convertLinks(text) {
-    const urlRegex = /\b(?:https?:\/\/|www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/g;
+    const urlRegex = /(\b(?:https?:\/\/|www\.)[^\s]+|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
     return text.replace(urlRegex, (url) => {
-        const href = url.startsWith("http://") || url.startsWith("https://") ? url : `http://${url}`;
-        return `<a href="${href}" target="_blank">${url}</a>`;
+        if (url.includes('@')) {
+            return `<a href="mailto:${url}">${url}</a>`;
+        } else {
+            const href = url.startsWith("http://") || url.startsWith("https://") ? url : `http://${url}`;
+            return `<a href="${href}" target="_blank">${url}</a>`;
+        }
     });
 }
 
 
+
 var nodesTabListElem = document.getElementById("noteTabsList");
+var tabsListForModify = document.getElementById("modifyTabsList");
 function populateTabsDropDown(){
     chrome.storage.local.get(["tabs"],(result)=>{
         let tabsList = result.tabs || [];
         nodesTabListElem.innerHTML="";
-
+        tabsListForModify.innerHTML="";
+        
         tabsList.forEach((tabName,index)=>{
             let option = document.createElement("option");
             option.textContent = tabName;
             option.value = index ;
             nodesTabListElem.appendChild(option);
         });
+
+        tabsList.forEach((tabName,index)=>{
+            let option = document.createElement("option");
+            option.textContent = tabName;
+            option.value = index ;
+            tabsListForModify.appendChild(option);
+        });
+       
     });
 }
 populateTabsDropDown();
@@ -98,52 +150,59 @@ function generateTabsAndContents() {
             tabPanel.classList.add("tabcontent");
             tabPanel.style.display = "none";
 
-            const notesForTab = notes[index] || {};
-            if (Object.keys(notesForTab).length === 0) {
+            const notesForTab = notes[index] || []; 
+            const sortedNotes = notesForTab.sort((a, b) => b.timestamp - a.timestamp); 
+
+            if (sortedNotes.length === 0) {
                 const noNotesMessage = document.createElement("p");
                 noNotesMessage.textContent = "هیچ یادداشتی در این تب وجود ندارد.";
                 tabPanel.appendChild(noNotesMessage);
             } else {
-                Object.entries(notesForTab).forEach(([noteTitle, noteBody]) => {
+                sortedNotes.forEach(({ title, body }) => {
                     const noteItem = document.createElement("div");
                     noteItem.classList.add("note-item");
 
                     const noteHeading = document.createElement("h4");
-                    noteHeading.textContent = `عنوان: ${noteTitle}`;
+                    noteHeading.textContent = `عنوان: ${title}`;
 
                     const noteContent = document.createElement("p");
-                    noteContent.innerHTML = convertLinks(noteBody);
+                    noteContent.innerHTML = convertLinks(body);
                     noteItem.appendChild(noteHeading);
                     noteItem.appendChild(noteContent);
                     tabPanel.appendChild(noteItem);
 
                     const updateButton = document.createElement("button");
                     updateButton.textContent = "ویرایش";
+                    updateButton.classList.add("updateNoteBtn");
                     updateButton.addEventListener("click", () => {
-                        const newTitle = prompt("عنوان جدید:", noteTitle);
-                        const newBody = prompt("متن جدید:", noteBody);
+                        const newTitle = prompt("عنوان جدید:", title);
+                        const newBody = prompt("متن جدید:", body);
 
                         if (newTitle && newBody) {
-                            delete notes[index][noteTitle]; 
-                            notes[index][newTitle] = newBody; 
-
-                            chrome.storage.local.set({ notes }, () => {
-                                alert("یادداشت با موفقیت ویرایش شد.");
-                                generateTabsAndContents(); 
-                            });
+                            const noteIndex = notesForTab.findIndex(note => note.title === title);
+                            if (noteIndex !== -1) {
+                                notes[tabName][noteIndex] = { title: newTitle, body: newBody, timestamp: Date.now() };
+                                chrome.storage.local.set({ notes }, () => {
+                                    alert("یادداشت با موفقیت ویرایش شد.");
+                                    generateTabsAndContents();
+                                });
+                            }
                         }
                     });
 
                     const deleteButton = document.createElement("button");
                     deleteButton.textContent = "حذف";
+                    deleteButton.classList.add("deleteNoteBtn");
                     deleteButton.addEventListener("click", () => {
-                        if (confirm(`آیا می‌خواهید یادداشت "${noteTitle}" را حذف کنید؟`)) {
-                            delete notes[index][noteTitle];
-
-                            chrome.storage.local.set({ notes }, () => {
-                                alert("یادداشت با موفقیت حذف شد.");
-                                generateTabsAndContents(); 
-                            });
+                        if (confirm(`آیا می‌خواهید یادداشت "${title}" را حذف کنید؟`)) {
+                            const noteIndex = notesForTab.findIndex(note => note.title === title);
+                            if (noteIndex !== -1) {
+                                notes[tabName].splice(noteIndex, 1);
+                                chrome.storage.local.set({ notes }, () => {
+                                    alert("یادداشت با موفقیت حذف شد.");
+                                    generateTabsAndContents();
+                                });
+                            }
                         }
                     });
 
@@ -169,6 +228,7 @@ function generateTabsAndContents() {
         }
     });
 }
+
 
 
 generateTabsAndContents();

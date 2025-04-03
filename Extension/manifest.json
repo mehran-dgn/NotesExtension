@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Notes Organizer Extension",
+  "version": "1.0",
+  "description": "A Chrome extension to save and organize notes.",
+  "permissions": [
+    "storage"
+  ],
+  "icons": {
+   
+  },
+  "action": {
+    "default_popup": "index.html"
+  }
+}

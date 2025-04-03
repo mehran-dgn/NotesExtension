@@ -1,0 +1,91 @@
+@font-face {
+    font-family: vazirFont;
+    src: url(assets/fonts/Vazir.ttf);
+  }
+
+  *{
+    font-family:vazirFont !important;
+  }
+.mainContainer{
+    min-width:650px !important;
+    min-height:500px !important;
+    max-width:100%;
+    background-color:#fff;
+    display: flex;
+    flex-direction:column;
+
+}
+
+.addNotesButton{
+    display: flex;
+    flex-direction:row;
+    justify-content: space-between;
+}
+#noteTitle, #noteBody , #noteTabsList{
+    border-radius:10px;
+}
+#addNoteButton{
+    background-color: #4c8df5;
+    color:#fff ; 
+    border-radius:8px;
+}
+#tabNameEntry,#addNewTab{
+    border-radius:10px;
+}
+#addNewTab{
+    background-color:#4c8df5;
+    color:#fff;
+    margin-right:5px;
+}
+
+.addTabsButton{
+    margin-top:10px !important;
+    display: flex;
+    flex-direction:row;
+}
+
+.tab {
+    overflow: scroll;
+    
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+    display: flex;
+  }
+
+
+  .tab button {
+    font-family: vazirFont;
+    background-color: inherit;
+    float: right;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    font-size: 17px;
+  }
+
+  .tab button:hover {
+    background-color: #ddd;
+  }
+  
+  .tab button.active {
+    background-color: #ccc;
+  }
+
+  .tabcontents{
+    display: flex;
+    direction:rtl;
+  }
+
+  .tabcontent{
+    width:100% !important;
+  }
+  .note-item{
+    width:100% !important;
+  }
+  .note-item:not(:last-child){
+    padding-bottom:2px;
+    box-sizing: border-box;
+    border-bottom:1px solid black;
+  }
